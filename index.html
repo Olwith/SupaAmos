@@ -1039,7 +1039,7 @@ body {
   z-index: 0;
   pointer-events: none;
   opacity: 0.15;
-  background-image: url('images/theme/cover-floral.webp');
+  background-image: url('images/theme.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center top;
@@ -1122,8 +1122,9 @@ body {
     </button>
   </div>
 
+  <!-- ✅ FIXED: raw.githubusercontent.com URL + clean filename -->
   <audio id="wedding-music" loop preload="auto">
-    <source src="https://github.com/Olwith/SupaAmos/blob/main/music/WhatsApp%20Audio%202026-10-11%20at%2020.13.49%20(1).mpeg" type="audio/mpeg" />
+    <source src="music/song.mp3" type="audio/mpeg" />
   </audio>
 
   <div class="invitation-wrapper">
@@ -1264,12 +1265,12 @@ body {
         <div class="wishes-list" id="wishes-list"></div>
       </section>
 
-      <!-- GIFT -->
+      <!-- ✅ FIXED: proper id + src for the QR image -->
       <section class="section gift-section">
         <h2 class="section-title">Gift Box</h2>
         <h3 class="gift-title">Supa &amp; Amos — Send your love via M-PESA</h3>
         <div class="qr-wrapper">
-          <img id="images/QR.jpeg" alt="M-PESA QR code" />
+          <img id="qr-img" src="images/QR.jpeg" alt="M-PESA QR code" />
         </div>
         <p class="mpesa-number">Stellah: 0711 736 941 &nbsp;|&nbsp; Amos: 0710 935 849</p>
         <a class="save-qr-btn" id="save-qr" download="supa-amos-gift-qr.png">⬇ Save QR</a>
@@ -1294,16 +1295,16 @@ body {
 const WEDDING = {
   date: new Date('2026-11-07T10:00:00+03:00'),
   photos: [
-     'images/image1.jpeg',
-     'images/image2.jpeg',
-     'images/image3.jpeg',
-     'images/image4.jpeg',
-     'images/image5.jpeg',
-     'images/image6.jpeg',
-     'images/image7.jpeg',
-     'images/image8.jpeg',
-     'images/image9.jpeg',
-     'images/image10.jpeg',
+    'images/image1.jpeg',
+    'images/image2.jpeg',
+    'images/image3.jpeg',
+    'images/image4.jpeg',
+    'images/image5.jpeg',
+    'images/image6.jpeg',
+    'images/image7.jpeg',
+    'images/image8.jpeg',
+    'images/image9.jpeg',
+    'images/image10.jpeg',
   ],
   schedule: [
     { time: '10:00 AM', event: 'Arrival & Prayers' },
@@ -1531,7 +1532,7 @@ galleryStage.addEventListener('touchend', e => {
 });
 
 let galleryAutoTimer = null;
-const GALLERY_INTERVAL = 3500;
+const GALLERY_INTERVAL = 2500;   /* ✅ FIXED: faster — was 3500 */
 
 function startGalleryAutoPlay() {
   clearInterval(galleryAutoTimer);
@@ -1704,16 +1705,17 @@ document.getElementById('rsvp-btn').addEventListener('click', () => {
 (function () {
   const qrImg = document.getElementById('qr-img');
   const saveLink = document.getElementById('save-qr');
-  const localSrc = 'images/qr/gift-qr.jpg';
+  const localSrc = 'images/QR.jpeg';   /* ✅ FIXED path */
   const fallbackSrc = 'https://quickchart.io/qr?text=' + encodeURIComponent(
     'M-PESA: Stellah 0711736941 | Amos 0710935849'
   ) + '&size=400&margin=2';
-  qrImg.src = localSrc;
+
+  /* If src attribute already works, keep it. Otherwise fall back. */
   qrImg.onerror = () => {
     qrImg.src = fallbackSrc;
     saveLink.href = fallbackSrc;
   };
-  saveLink.href = localSrc;
+  saveLink.href = qrImg.src || localSrc;
 })();
 
 /* ============================================================
@@ -1749,10 +1751,10 @@ spawnPetals(document.getElementById('petals-cover'), 16);
 spawnPetals(document.getElementById('petals-main'), 14);
 
 /* ============================================================
-   KICK OFF GALLERY AUTO-PLAY WHEN INVITATION OPENS
+   START GALLERY AUTO-PLAY WHEN INVITATION OPENS
    ============================================================ */
 openBtn.addEventListener('click', () => {
-  setTimeout(() => startGalleryAutoPlay(), 1500);
+  setTimeout(() => startGalleryAutoPlay(), 500);   /* ✅ FIXED: was 1500 */
 });
 </script>
 
