@@ -85,6 +85,35 @@ body {
 }
 
 /* ============================================================
+   MUSIC TAP PROMPT (shown only if autoplay is blocked)
+   ============================================================ */
+.music-prompt {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  z-index: 41;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(216,167,177,0.6);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: promptBounce 1.6s ease-in-out infinite;
+}
+@keyframes promptBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* ============================================================
    COVER SCREEN
    ============================================================ */
 .cover-screen {
@@ -1109,6 +1138,11 @@ body {
     </svg>
   </button>
 
+  <!-- Tap-to-play prompt (only shown if autoplay is blocked) -->
+  <button id="music-prompt" class="music-prompt hidden">
+    🎵 Tap to play music
+  </button>
+
   <!-- Scroll controls -->
   <div class="scroll-controls">
     <button id="autoscroll-btn" class="scroll-btn" title="Toggle auto-scroll" aria-label="Toggle auto-scroll">
@@ -1122,9 +1156,10 @@ body {
     </button>
   </div>
 
-  <!-- ✅ FIXED: raw.githubusercontent.com URL + clean filename -->
-  <audio id="wedding-music" loop preload="auto">
-    <source src="https://mp3tourl.com/audio/1791812771085-7b471ef8-b9c5-4492-999c-9e71d71c9088.mp3" type="audio/mp3" />
+  <!-- ✅ FIXED: points to your GitHub-hosted song -->
+  <audio id="wedding-music" loop preload="auto" playsinline crossorigin="anonymous">
+    <source src="https://raw.githubusercontent.com/Olwith/SupaAmos/main/music/song1.mp3" type="audio/mpeg" />
+    Your browser does not support audio.
   </audio>
 
   <div class="invitation-wrapper">
@@ -1265,7 +1300,7 @@ body {
         <div class="wishes-list" id="wishes-list"></div>
       </section>
 
-      <!-- ✅ FIXED: proper id + src for the QR image -->
+      <!-- GIFT -->
       <section class="section gift-section">
         <h2 class="section-title">Gift Box</h2>
         <h3 class="gift-title">Supa &amp; Amos — Send your love via M-PESA</h3>
@@ -1532,7 +1567,7 @@ galleryStage.addEventListener('touchend', e => {
 });
 
 let galleryAutoTimer = null;
-const GALLERY_INTERVAL = 2500;   /* ✅ FIXED: faster — was 3500 */
+const GALLERY_INTERVAL = 2500;
 
 function startGalleryAutoPlay() {
   clearInterval(galleryAutoTimer);
@@ -1604,47 +1639,76 @@ layoutGallery();
 })();
 
 /* ============================================================
-   MUSIC
+   MUSIC  —  ✅ REWRITTEN FOR RELIABILITY
    ============================================================ */
-const audio = document.getElementById('wedding-music');
-const musicBtn = document.getElementById('music-btn');
-const iconOn = musicBtn.querySelector('.music-icon-on');
-const iconOff = musicBtn.querySelector('.music-icon-off');
+const audio       = document.getElementById('wedding-music');
+const musicBtn    = document.getElementById('music-btn');
+const musicPrompt = document.getElementById('music-prompt');
+const iconOn      = musicBtn.querySelector('.music-icon-on');
+const iconOff     = musicBtn.querySelector('.music-icon-off');
 
-function startMusic() {
-  audio.volume = 0;
-  audio.play().then(() => {
+function setMusicUI(playing) {
+  if (playing) {
     iconOn.classList.remove('hidden');
     iconOff.classList.add('hidden');
     musicBtn.classList.add('playing');
-    fadeVolume(0, 1, 2000);
-  }).catch(err => {
-    console.warn('Autoplay blocked:', err);
-  });
-}
-
-function fadeVolume(from, to, duration) {
-  const start = performance.now();
-  const step = (now) => {
-    const t = Math.min((now - start) / duration, 1);
-    audio.volume = from + (to - from) * t;
-    if (t < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-musicBtn.addEventListener('click', () => {
-  if (audio.paused) {
-    audio.play();
-    iconOn.classList.remove('hidden');
-    iconOff.classList.add('hidden');
-    musicBtn.classList.add('playing');
+    musicPrompt.classList.add('hidden');
   } else {
-    audio.pause();
     iconOn.classList.add('hidden');
     iconOff.classList.remove('hidden');
     musicBtn.classList.remove('playing');
   }
+}
+
+/* Called directly from the "Open" click — synchronous so browsers allow it */
+function startMusic() {
+  audio.volume = 1;                       // full volume — no fade to get stuck at 0
+  audio.muted  = false;
+
+  const playPromise = audio.play();
+
+  if (playPromise && typeof playPromise.then === 'function') {
+    playPromise
+      .then(() => {
+        setMusicUI(true);
+      })
+      .catch(err => {
+        console.warn('Autoplay blocked — user must tap to start music:', err);
+        setMusicUI(false);
+        musicPrompt.classList.remove('hidden');  // show a "Tap to play" button
+      });
+  } else {
+    // Older browsers — just check the paused state
+    setTimeout(() => {
+      if (!audio.paused) setMusicUI(true);
+      else {
+        setMusicUI(false);
+        musicPrompt.classList.remove('hidden');
+      }
+    }, 250);
+  }
+}
+
+/* Manual toggle via the floating button */
+musicBtn.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play().then(() => setMusicUI(true)).catch(() => {});
+  } else {
+    audio.pause();
+    setMusicUI(false);
+  }
+});
+
+/* Tap the "Tap to play" prompt */
+musicPrompt.addEventListener('click', () => {
+  audio.play().then(() => setMusicUI(true)).catch(() => {});
+});
+
+/* Fallback: if the browser refuses to even load the file */
+audio.addEventListener('error', () => {
+  console.warn('Audio failed to load. Check the URL:', audio.currentSrc);
+  musicPrompt.classList.remove('hidden');
+  musicPrompt.textContent = '🎵 Music unavailable — tap to retry';
 });
 
 /* ============================================================
@@ -1705,17 +1769,15 @@ document.getElementById('rsvp-btn').addEventListener('click', () => {
 (function () {
   const qrImg = document.getElementById('qr-img');
   const saveLink = document.getElementById('save-qr');
-  const localSrc = 'images/QR.jpeg';   /* ✅ FIXED path */
   const fallbackSrc = 'https://quickchart.io/qr?text=' + encodeURIComponent(
     'M-PESA: Stellah 0711736941 | Amos 0710935849'
   ) + '&size=400&margin=2';
 
-  /* If src attribute already works, keep it. Otherwise fall back. */
   qrImg.onerror = () => {
     qrImg.src = fallbackSrc;
     saveLink.href = fallbackSrc;
   };
-  saveLink.href = qrImg.src || localSrc;
+  saveLink.href = qrImg.src;
 })();
 
 /* ============================================================
@@ -1754,7 +1816,7 @@ spawnPetals(document.getElementById('petals-main'), 14);
    START GALLERY AUTO-PLAY WHEN INVITATION OPENS
    ============================================================ */
 openBtn.addEventListener('click', () => {
-  setTimeout(() => startGalleryAutoPlay(), 500);   /* ✅ FIXED: was 1500 */
+  setTimeout(() => startGalleryAutoPlay(), 500);
 });
 </script>
 
