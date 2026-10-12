@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Supa &amp; Amos | Wedding Invitation</title>
-<meta name="description" content="7th November 2026 • Lighthouse Chapel International, Jogoo Road. Cordially inviting you to celebrate the wedding of Supa & Amos." />
+<meta name="description" content="7th November 2026 • Double Mega Missionary Church Kenya HQ, Jogoo Road. Cordially inviting you to celebrate the wedding of Supa & Amos." />
 <meta name="theme-color" content="#D8BFD8" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1259,12 +1259,23 @@ body {
         <button class="confirm-btn" id="rsvp-btn">CONFIRM ATTENDANCE</button>
       </div>
 
-      <!-- VENUE -->
+      <!-- VENUE — ✅ FIXED MAP -->
       <section class="section venue-section">
         <h3 class="section-title">Wedding Reception Venue</h3>
-        <div class="venue-name">Double Mega Missionary Church Kenya HQ<br/>Jogoo Road, Nairobi</div>
-        <iframe class="map-iframe" src="https://maps.app.goo.gl/oKGttxvssQK7r6469" loading="lazy"></iframe>
-        <a class="directions-link" href="https://maps.app.goo.gl/oKGttxvssQK7r6469" target="_blank" rel="noopener">
+        <div class="venue-name">
+          Double Mega Missionary Church Kenya HQ<br/>Jogoo Road, Nairobi
+        </div>
+        <iframe
+          class="map-iframe"
+          src="https://www.google.com/maps?q=Double+Mega+Missionary+Church+Kenya+HQ+Jogoo+Road+Nairobi&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Wedding venue map"
+        ></iframe>
+        <a class="directions-link"
+           href="https://www.google.com/maps/dir/?api=1&destination=Double+Mega+Missionary+Church+Kenya+HQ+Jogoo+Road+Nairobi"
+           target="_blank"
+           rel="noopener">
           📍 Get directions
         </a>
       </section>
@@ -1340,7 +1351,6 @@ body {
 /* ============================================================
    CONFIG
    ============================================================ */
-   
 const WEDDING = {
   date: new Date('2026-11-07T10:00:00+03:00'),
   photos: [
@@ -1369,7 +1379,7 @@ const WEDDING = {
     title: 'Supa & Amos Wedding',
     start: '20261107T073000Z',
     end:   '20261107T120000Z',
-    location: 'Lighthouse Chapel International, Jogoo Road, Nairobi',
+    location: 'Double Mega Missionary Church Kenya HQ, Jogoo Road, Nairobi',
     details: 'Join us to celebrate the wedding of Supa Stellah Anyoso & Amos Kisangau.',
   },
   calendarYear: 2026,
@@ -1377,8 +1387,14 @@ const WEDDING = {
   weddingDay: 7,
   firstDayOffset: 6,
   daysInMonth: 30,
-  /** ✅ WhatsApp number that receives the guestbook wishes (Stellah) */
   whatsappNumber: '254711736941',
+  /* ✅ Venue location config — used for both map & directions */
+  venue: {
+    name: 'Double Mega Missionary Church Kenya HQ',
+    address: 'Jogoo Road, Nairobi',
+    /* Query string for the map embed & directions */
+    query: 'Double Mega Missionary Church Kenya HQ Jogoo Road Nairobi'
+  },
 };
 
 /* ============================================================
@@ -1721,7 +1737,7 @@ audio.addEventListener('error', () => {
 });
 
 /* ============================================================
-   GUESTBOOK  —  ✅ WISHES NOW GO TO WHATSAPP
+   GUESTBOOK — wishes go to WhatsApp
    ============================================================ */
 const form = document.getElementById('guestbook-form');
 const wishesList = document.getElementById('wishes-list');
@@ -1756,7 +1772,6 @@ form.addEventListener('submit', e => {
   const text = data.get('wish').trim();
   if (!name || !text) return;
 
-  /* 1. Save locally so it appears in the Guestbook list */
   const newWish = { name, text, date: new Date().toLocaleDateString() };
   const stored = JSON.parse(localStorage.getItem('supa-amos-wishes') || '[]');
   stored.push(newWish);
@@ -1764,7 +1779,6 @@ form.addEventListener('submit', e => {
   renderWishes();
   form.reset();
 
-  /* 2. Open WhatsApp with the wish pre-filled */
   const message =
     `💌 A wedding wish for Supa & Amos\n\n` +
     `From: ${name}\n\n` +
@@ -1774,12 +1788,8 @@ form.addEventListener('submit', e => {
   const whatsappURL =
     `https://wa.me/${WEDDING.whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-  /* Open in a new tab / app so the guest doesn't leave the invitation */
   const opened = window.open(whatsappURL, '_blank');
-  if (!opened) {
-    /* Popup blocked — fall back to same-tab navigation */
-    window.location.href = whatsappURL;
-  }
+  if (!opened) window.location.href = whatsappURL;
 });
 
 renderWishes();
@@ -1789,7 +1799,7 @@ renderWishes();
    ============================================================ */
 document.getElementById('rsvp-btn').addEventListener('click', () => {
   const msg = encodeURIComponent(
-    "Hello Supa & Amos! I would love to confirm my attendance at your wedding on 7th November 2026 at Lighthouse Chapel International, Jogoo Road."
+    "Hello Supa & Amos! I would love to confirm my attendance at your wedding on 7th November 2026 at Double Mega Missionary Church Kenya HQ, Jogoo Road."
   );
   window.open(`https://wa.me/${WEDDING.whatsappNumber}?text=${msg}`, '_blank');
 });
